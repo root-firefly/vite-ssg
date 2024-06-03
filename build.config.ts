@@ -9,6 +9,7 @@ export default defineBuildConfig({
   ],
   clean: true,
   declaration: true,
+  sourcemap: true,
   externals: [
     'vue',
     'vue/server-renderer',

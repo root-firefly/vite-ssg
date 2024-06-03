@@ -18,7 +18,7 @@
     "vite": "^5.2.10",
     "vite-plugin-pages": "^0.32.1",
     "vite-plugin-pwa": "^0.19.8",
-    "vite-ssg": "workspace:*",
+    "@rfirefly/vite-ssg": "workspace:*",
     "vue-router": "^4.3.2"
   }
 }

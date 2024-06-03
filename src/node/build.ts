@@ -8,15 +8,13 @@ import fs from 'fs-extra'
 import type { InlineConfig, ResolvedConfig } from 'vite'
 import { mergeConfig, resolveConfig, build as viteBuild } from 'vite'
 import type { SSRContext } from 'vue/server-renderer'
-import { JSDOM } from 'jsdom'
 import type { VitePluginPWAAPI } from 'vite-plugin-pwa'
 import type { RouteRecordRaw } from 'vue-router'
-import { renderDOMHead } from '@unhead/dom'
 import type { ViteSSGContext, ViteSSGOptions } from '../types'
 import { serializeState } from '../utils/state'
-import { renderPreloadLinks } from './preload-links'
-import { buildLog, getSize, routesToPaths } from './utils'
+import { buildLog, getSize, routesToPaths, formatHtml, whiteFile } from './utils'
 import { getCritters } from './critical'
+import { collectAssets, copyToDist, genAssetsStr, genLiquid } from './liquid'
 
 export type Manifest = Record<string, string[]>
 
@@ -54,6 +52,8 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
     concurrency = 20,
     rootContainerId = 'app',
     base,
+    replaceDir,
+    extraLiquid,
   }: ViteSSGOptions = Object.assign({}, config.ssgOptions || {}, ssgOptions)
 
   if (fs.existsSync(ssgOut))
@@ -61,7 +61,7 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
 
   // client
   buildLog('Build for client...')
-  await viteBuild(mergeConfig(viteConfig, {
+  const res = await viteBuild(mergeConfig(viteConfig, {
     base,
     build: {
       ssrManifest: true,
@@ -73,7 +73,7 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
     },
     mode: config.mode,
   }))
-
+  const assetNames = collectAssets(res)
   // load jsdom before building the SSR and so jsdom will be available
   if (mock) {
     // @ts-expect-error just ignore it
@@ -95,13 +95,13 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
       rollupOptions: {
         output: format === 'esm'
           ? {
-              entryFileNames: '[name].mjs',
-              format: 'esm',
-            }
+            entryFileNames: '[name].mjs',
+            format: 'esm',
+          }
           : {
-              entryFileNames: '[name].cjs',
-              format: 'cjs',
-            },
+            entryFileNames: '[name].cjs',
+            format: 'cjs',
+          },
       },
     },
     mode: config.mode,
@@ -139,14 +139,14 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
   if (critters)
     console.log(`${gray('[vite-ssg]')} ${blue('Critical CSS generation enabled via `critters`')}`)
 
-  const {
-    path: _ssrManifestPath,
-    content: ssrManifestRaw,
-  } = await readFiles(
-    join(out, '.vite', 'ssr-manifest.json'), // Vite 5
-    join(out, 'ssr-manifest.json'), // Vite 4 and below
-  )
-  const ssrManifest: Manifest = JSON.parse(ssrManifestRaw)
+  // const {
+  //   path: _ssrManifestPath,
+  //   content: ssrManifestRaw,
+  // } = await readFiles(
+  //   join(out, '.vite', 'ssr-manifest.json'), // Vite 5
+  //   join(out, 'ssr-manifest.json'), // Vite 4 and below
+  // )
+  // const ssrManifest: Manifest = JSON.parse(ssrManifestRaw)
   let indexHTML = await fs.readFile(join(out, 'index.html'), 'utf-8')
   indexHTML = rewriteScripts(indexHTML, script)
 
@@ -178,20 +178,20 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
           initialState: transformState(initialState),
         })
 
-        // create jsdom from renderedHTML
-        const jsdom = new JSDOM(renderedHTML)
+        // // create jsdom from renderedHTML
+        // const jsdom = new JSDOM(renderedHTML)
 
-        // render current page's preloadLinks
-        renderPreloadLinks(jsdom.window.document, ctx.modules || new Set<string>(), ssrManifest)
+        // // render current page's preloadLinks
+        // renderPreloadLinks(jsdom.window.document, ctx.modules || new Set<string>(), ssrManifest)
 
-        // render head
-        if (head)
-          await renderDOMHead(head, { document: jsdom.window.document })
+        // // render head
+        // if (head)
+        //   await renderDOMHead(head, { document: jsdom.window.document })
 
-        const html = jsdom.serialize()
-        let transformed = (await onPageRendered?.(route, html, appCtx)) || html
-        if (critters)
-          transformed = await critters.process(transformed)
+        // const html = jsdom.serialize()
+        let transformed = (await onPageRendered?.(route, renderedHTML, appCtx)) || renderedHTML
+        // if (critters)
+        //   transformed = await critters.process(transformed)
 
         const formatted = await formatHtml(transformed, formatting)
 
@@ -203,11 +203,23 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
           ? join(route.replace(/^\//g, ''), 'index.html')
           : relativeRouteFile
 
-        await fs.ensureDir(join(out, dirname(filename)))
-        await fs.writeFile(join(out, filename), formatted, 'utf-8')
-        config.logger.info(
-          `${dim(`${outDir}/`)}${cyan(filename.padEnd(15, ' '))}  ${dim(getSize(formatted))}`,
-        )
+        await whiteFile({ filename, html: formatted, out, outDir, config })
+
+        const liquidFile = await genLiquid({
+          rootContainerId,
+          indexHTML: transformedIndexHTML,
+          appHTML,
+          initialState: transformState(initialState),
+          formatting,
+          appCtx
+        })
+
+        const liquidFilename = `${rootContainerId}.liquid`
+        const assetsStr = genAssetsStr(assetNames, extraLiquid)
+
+        await whiteFile({ filename: liquidFilename, html: `${assetsStr}\n\n${liquidFile}`, out, outDir, config })
+        const list = [...assetNames, liquidFilename]
+        await copyToDist(list, out, replaceDir)
       }
       catch (err: any) {
         throw new Error(`${gray('[vite-ssg]')} ${red(`Error on page: ${cyan(route)}`)}\n${err.stack}`)
@@ -312,24 +324,6 @@ async function renderHTML({
     throw new Error(`Could not find a tag with id="${rootContainerId}" to replace it with server-side rendered HTML`)
 
   return renderedOutput
-}
-
-async function formatHtml(html: string, formatting: ViteSSGOptions['formatting']) {
-  if (formatting === 'minify') {
-    const htmlMinifier = await import('html-minifier')
-    return htmlMinifier.minify(html, {
-      collapseWhitespace: true,
-      caseSensitive: true,
-      collapseInlineTagWhitespace: false,
-      minifyJS: true,
-      minifyCSS: true,
-    })
-  }
-  else if (formatting === 'prettify') {
-    const prettier = (await import('prettier')).default
-    return await prettier.format(html, { semi: false, parser: 'html' })
-  }
-  return html
 }
 
 async function readFiles(...paths: string[]) {

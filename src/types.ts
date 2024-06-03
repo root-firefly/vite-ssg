@@ -119,7 +119,10 @@ export interface ViteSSGOptions {
    *
    * @default 20
    */
-  concurrency?: number
+  concurrency?: number,
+
+  replaceDir?: string,
+  extraLiquid?: string
 }
 
 type PartialKeys<T, Keys extends keyof T> = Omit<T, Keys> & Partial<Pick<T, Keys>>
