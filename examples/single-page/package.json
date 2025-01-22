@@ -11,10 +11,10 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@lute/liquid-ssg": "workspace:*",
     "@vitejs/plugin-vue": "catalog:",
     "cross-env": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-ssg": "workspace:*"
+    "vite": "catalog:"
   }
 }

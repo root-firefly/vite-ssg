@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
 import createExternal from 'vite-plugin-external'
 
 export default defineConfig(ssrBuild => ({

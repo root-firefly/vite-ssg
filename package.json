@@ -72,9 +72,6 @@
   "peerDependenciesMeta": {
     "beasties": {
       "optional": true
-    },
-    "vue-router": {
-      "optional": true
     }
   },
   "dependencies": {
