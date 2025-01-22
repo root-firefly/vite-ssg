@@ -1,6 +1,6 @@
 {
   "name": "@lute/liquid-ssg",
-  "version": "25.0.0",
+  "version": "25.0.1",
   "packageManager": "pnpm@9.15.3",
   "description": "Server-side generation for Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
@@ -78,8 +78,6 @@
     }
   },
   "dependencies": {
-    "@unhead/dom": "catalog:",
-    "@unhead/vue": "catalog:",
     "fs-extra": "catalog:",
     "html-minifier-terser": "catalog:",
     "html5parser": "catalog:",
