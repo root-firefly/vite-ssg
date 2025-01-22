@@ -1,7 +1,7 @@
 import type { MergeHead, VueHeadClient } from '@unhead/vue'
 import type { Options as BeastiesOptions } from 'beasties'
 import type { App } from 'vue'
-import type { Router, RouteRecordRaw, RouterOptions as VueRouterOptions } from 'vue-router'
+import type { RouteRecordRaw, Router, RouterOptions as VueRouterOptions } from 'vue-router'
 
 export interface ViteSSGOptions {
   /**

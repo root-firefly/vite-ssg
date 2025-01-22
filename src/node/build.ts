@@ -1,31 +1,31 @@
+import type { IAttribute } from 'html5parser'
+/* eslint-disable no-console */
+// import type { RouteRecordRaw } from 'vue-router'
 import type { InlineConfig, ResolvedConfig } from 'vite'
-import type { VitePluginPWAAPI } from 'vite-plugin-pwa'
-import type { RouteRecordRaw } from 'vue-router'
 import type { SSRContext } from 'vue/server-renderer'
 import type { ViteSSGContext, ViteSSGOptions } from '../types'
 import { createRequire } from 'node:module'
-/* eslint-disable no-console */
-import { dirname, isAbsolute, join, parse } from 'node:path'
+import { basename, dirname, isAbsolute, join, parse } from 'node:path'
 import process from 'node:process'
 import { renderDOMHead } from '@unhead/dom'
 import fs from 'fs-extra'
 import { JSDOM } from 'jsdom'
 import { blue, cyan, dim, gray, green, red, yellow } from 'kolorist'
-import PQueue from 'p-queue'
+// import PQueue from 'p-queue'
 import { mergeConfig, resolveConfig, build as viteBuild } from 'vite'
 import { serializeState } from '../utils/state'
 import { getBeasties } from './critical'
 import { renderPreloadLinks } from './preload-links'
-import { buildLog, getSize, routesToPaths } from './utils'
+import { buildLog, getSize } from './utils'
 
 export type Manifest = Record<string, string[]>
 
 export type CreateAppFactory = (client: boolean, routePath?: string) => Promise<ViteSSGContext<true> | ViteSSGContext<false>>
 
-function DefaultIncludedRoutes(paths: string[], _routes: Readonly<RouteRecordRaw[]>) {
-  // ignore dynamic routes
-  return paths.filter(i => !i.includes(':') && !i.includes('*'))
-}
+// function DefaultIncludedRoutes(paths: string[], _routes: Readonly<RouteRecordRaw[]>) {
+//   // ignore dynamic routes
+//   return paths.filter(i => !i.includes(':') && !i.includes('*'))
+// }
 
 export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig: InlineConfig = {}) {
   const nodeEnv = process.env.NODE_ENV || 'production'
@@ -45,14 +45,14 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
     mock = false,
     entry = await detectEntry(root),
     formatting = 'none',
-    includedRoutes: configIncludedRoutes = DefaultIncludedRoutes,
+    // includedRoutes: configIncludedRoutes = DefaultIncludedRoutes,
     onBeforePageRender,
     onPageRendered,
     onFinished,
-    dirStyle = 'flat',
-    includeAllRoutes = false,
+    // dirStyle = 'flat',
+    // includeAllRoutes = false,
     format = 'esm',
-    concurrency = 20,
+    // concurrency = 20,
     rootContainerId = 'app',
     base,
   }: ViteSSGOptions = mergedOptions
@@ -121,20 +121,20 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
 
   const _require = createRequire(import.meta.url)
 
-  const { createApp, includedRoutes: serverEntryIncludedRoutes }: { createApp: CreateAppFactory, includedRoutes: ViteSSGOptions['includedRoutes'] } = format === 'esm'
+  const { createApp }: { createApp: CreateAppFactory } = format === 'esm'
     ? await import(serverEntry)
     : _require(serverEntry)
-  const includedRoutes = serverEntryIncludedRoutes || configIncludedRoutes
-  const { routes } = await createApp(false)
+  // const includedRoutes = serverEntryIncludedRoutes || configIncludedRoutes
+  // const { routes } = await createApp(false)
 
-  let routesPaths = includeAllRoutes
-    ? routesToPaths(routes)
-    : await includedRoutes(routesToPaths(routes), routes || [])
+  // let routesPaths = includeAllRoutes
+  //   ? routesToPaths(routes)
+  //   : await includedRoutes(routesToPaths(routes), routes || [])
 
-  // uniq
-  routesPaths = Array.from(new Set(routesPaths))
+  // // uniq
+  // routesPaths = Array.from(new Set(routesPaths))
 
-  buildLog('Rendering Pages...', routesPaths.length)
+  // buildLog('Rendering Pages...', routesPaths.length)
 
   const beasties = beastiesOptions !== false
     ? await getBeasties(outDir, beastiesOptions)
@@ -156,91 +156,129 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
 
   const { renderToString }: typeof import('vue/server-renderer') = await import('vue/server-renderer')
 
-  const queue = new PQueue({ concurrency })
+  // const queue = new PQueue({ concurrency })
 
-  for (const route of routesPaths) {
-    queue.add(async () => {
-      try {
-        const appCtx = await createApp(false, route) as ViteSSGContext<true>
-        const { app, router, head, initialState, triggerOnSSRAppRendered, transformState = serializeState } = appCtx
+  // for (const route of routesPaths) {
+  //   queue.add(async () => {
+  //     try {
+  //       const appCtx = await createApp(false, route) as ViteSSGContext<true>
+  //       const { app, router, head, initialState, triggerOnSSRAppRendered, transformState = serializeState } = appCtx
 
-        if (router) {
-          await router.push(route)
-          await router.isReady()
-        }
+  //       if (router) {
+  //         await router.push(route)
+  //         await router.isReady()
+  //       }
 
-        const transformedIndexHTML = (await onBeforePageRender?.(route, indexHTML, appCtx)) || indexHTML
+  //       const transformedIndexHTML = (await onBeforePageRender?.(route, indexHTML, appCtx)) || indexHTML
 
-        const ctx: SSRContext = {}
-        const appHTML = await renderToString(app, ctx)
-        await triggerOnSSRAppRendered?.(route, appHTML, appCtx)
-        // need to resolve assets so render content first
-        const renderedHTML = await renderHTML({
-          rootContainerId,
-          indexHTML: transformedIndexHTML,
-          appHTML,
-          initialState: transformState(initialState),
-        })
+  //       const ctx: SSRContext = {}
+  //       const appHTML = await renderToString(app, ctx)
+  //       await triggerOnSSRAppRendered?.(route, appHTML, appCtx)
+  //       // need to resolve assets so render content first
+  //       const renderedHTML = await renderHTML({
+  //         rootContainerId,
+  //         indexHTML: transformedIndexHTML,
+  //         appHTML,
+  //         initialState: transformState(initialState),
+  //       })
 
-        // create jsdom from renderedHTML
-        const jsdom = new JSDOM(renderedHTML)
+  //       // create jsdom from renderedHTML
+  //       const jsdom = new JSDOM(renderedHTML)
 
-        // render current page's preloadLinks
-        renderPreloadLinks(jsdom.window.document, ctx.modules || new Set<string>(), ssrManifest)
+  //       // render current page's preloadLinks
+  //       renderPreloadLinks(jsdom.window.document, ctx.modules || new Set<string>(), ssrManifest)
 
-        // render head
-        if (head)
-          await renderDOMHead(head, { document: jsdom.window.document })
+  //       // render head
+  //       if (head)
+  //         await renderDOMHead(head, { document: jsdom.window.document })
 
-        const html = jsdom.serialize()
-        let transformed = (await onPageRendered?.(route, html, appCtx)) || html
-        if (beasties)
-          transformed = await beasties.process(transformed)
+  //       const html = jsdom.serialize()
+  //       let transformed = (await onPageRendered?.(route, html, appCtx)) || html
+  //       if (beasties)
+  //         transformed = await beasties.process(transformed)
 
-        const formatted = await formatHtml(transformed, formatting)
+  //       const formatted = await formatHtml(transformed, formatting)
 
-        const relativeRouteFile = `${(route.endsWith('/')
-          ? `${route}index`
-          : route).replace(/^\//g, '')}.html`
+  //       const relativeRouteFile = `${(route.endsWith('/')
+  //         ? `${route}index`
+  //         : route).replace(/^\//g, '')}.html`
 
-        const filename = dirStyle === 'nested'
-          ? join(route.replace(/^\//g, ''), 'index.html')
-          : relativeRouteFile
+  //       const filename = dirStyle === 'nested'
+  //         ? join(route.replace(/^\//g, ''), 'index.html')
+  //         : relativeRouteFile
 
-        await fs.ensureDir(join(out, dirname(filename)))
-        await fs.writeFile(join(out, filename), formatted, 'utf-8')
-        config.logger.info(
-          `${dim(`${outDir}/`)}${cyan(filename.padEnd(15, ' '))}  ${dim(getSize(formatted))}`,
-        )
-      }
-      catch (err: any) {
-        throw new Error(`${gray('[vite-ssg]')} ${red(`Error on page: ${cyan(route)}`)}\n${err.stack}`)
-      }
+  //       await fs.ensureDir(join(out, dirname(filename)))
+  //       await fs.writeFile(join(out, filename), formatted, 'utf-8')
+  //       config.logger.info(
+  //         `${dim(`${outDir}/`)}${cyan(filename.padEnd(15, ' '))}  ${dim(getSize(formatted))}`,
+  //       )
+  //     }
+  //     catch (err: any) {
+  //       throw new Error(`${gray('[vite-ssg]')} ${red(`Error on page: ${cyan(route)}`)}\n${err.stack}`)
+  //     }
+  //   })
+  // }
+
+  try {
+    const appCtx = await createApp(false) as ViteSSGContext<true>
+    const { app, head, initialState, triggerOnSSRAppRendered, transformState = serializeState } = appCtx
+
+    // if (router) {
+    //   await router.push(route)
+    //   await router.isReady()
+    // }
+
+    const transformedIndexHTML = (await onBeforePageRender?.('', indexHTML, appCtx)) || indexHTML
+
+    const ctx: SSRContext = {}
+    const appHTML = await renderToString(app, ctx)
+    await triggerOnSSRAppRendered?.('', appHTML, appCtx)
+    // need to resolve assets so render content first
+    const renderedHTML = await renderHTML({
+      rootContainerId,
+      indexHTML: transformedIndexHTML,
+      appHTML,
+      initialState: transformState(initialState),
     })
-  }
 
-  await queue.start().onIdle()
+    // create jsdom from renderedHTML
+    const jsdom = new JSDOM(renderedHTML)
+
+    // render current page's preloadLinks
+    renderPreloadLinks(jsdom.window.document, ctx.modules || new Set<string>(), ssrManifest)
+
+    // render head
+    if (head)
+      await renderDOMHead(head, { document: jsdom.window.document })
+
+    const html = jsdom.serialize()
+    let transformed = (await onPageRendered?.('', html, appCtx)) || html
+    if (beasties)
+      transformed = await beasties.process(transformed)
+
+    const formatted = await formatHtml(transformed, formatting)
+
+    // const relativeRouteFile = `${(route.endsWith('/')
+    //   ? `${route}index`
+    //   : route).replace(/^\//g, '')}index.html`
+
+    const filename = 'index.html'
+
+    await fs.ensureDir(join(out, dirname(filename)))
+    await fs.writeFile(join(out, filename), formatted, 'utf-8')
+    config.logger.info(
+      `${dim(`${outDir}/`)}${cyan(filename.padEnd(15, ' '))}  ${dim(getSize(formatted))}`,
+    )
+  }
+  catch (err: any) {
+    throw new Error(`${gray('[vite-ssg]')} ${red(`Error on page: `)}\n${err.stack}`)
+  }
 
   await fs.remove(ssgOutTempFolder)
-
-  // when `vite-plugin-pwa` is presented, use it to regenerate SW after rendering
-  const pwaPlugin: VitePluginPWAAPI = config.plugins.find(i => i.name === 'vite-plugin-pwa')?.api
-  if (pwaPlugin && !pwaPlugin.disabled && pwaPlugin.generateSW) {
-    buildLog('Regenerate PWA...')
-    await pwaPlugin.generateSW()
-  }
 
   console.log(`\n${gray('[vite-ssg]')} ${green('Build finished.')}`)
 
   await onFinished?.()
-
-  // ensure build process always exits
-  const waitInSeconds = 15
-  const timeout = setTimeout(() => {
-    console.log(`${gray('[vite-ssg]')} ${yellow(`Build process still running after ${waitInSeconds}s. There might be something misconfigured in your setup. Force exit.`)}`)
-    process.exit(0)
-  }, waitInSeconds * 1000)
-  timeout.unref() // don't wait for timeout
 }
 
 async function detectEntry(root: string) {
@@ -347,4 +385,83 @@ async function readFiles(...paths: string[]) {
     }
   }
   throw new Error(`Could not find any of the following files: ${paths.join(', ')}`)
+}
+
+function genAttrstr(attributes: IAttribute[]) {
+  const others = attributes.filter(attr => attr.name.value !== 'src' && attr.name.value !== 'href')
+  return [...others.map(({ name: { value: name }, value }) => value ? `${name}="${value!.value}"` : name)].join(' ')
+}
+
+function getSrcName(attributes: IAttribute[]) {
+  const srcAttr = attributes.find(attr => attr.name.value === 'src' || attr.name.value === 'href')
+  if (srcAttr?.value?.value) {
+    return {
+      name: srcAttr.name.value,
+      src: basename(srcAttr?.value?.value),
+    }
+  }
+}
+
+// eslint-disable-next-line unused-imports/no-unused-vars
+async function renderBlock({
+  rootContainerId,
+  indexHTML,
+  appHTML,
+  initialState,
+  templateHTML,
+  copyFilter = [],
+}: {
+  rootContainerId: string
+  indexHTML: string
+  appHTML: string
+  initialState: any
+  templateHTML: string
+  copyFilter: string[]
+}) {
+  const stateScript = initialState
+    ? `\n<script>window.__INITIAL_STATE__=${initialState}</script>`
+    : ''
+  const htmlCtx = `<div id="${rootContainerId}" data-server-rendered="true">${appHTML}</div>${stateScript}`
+  let styleOutput: string = ''
+  let scriptOutput: string = ''
+
+  const html5Parser = await import('html5parser')
+  const ast = html5Parser.parse(indexHTML, { setAttributeMap: true })
+
+  const searchTag = ['script', 'style', 'link']
+  const blockFiles: string[] = []
+  html5Parser.walk(ast, {
+    enter: (node) => {
+      if (node?.type === html5Parser.SyntaxKind.Tag
+        && searchTag.includes(node.name)
+        && (copyFilter.some(name => node.attributeMap?.src?.value?.value.includes(name) || node.attributeMap?.href?.value?.value.includes(name)) || node.name === 'style')
+      ) {
+        if (node.name === 'script' || node.name === 'link') {
+          const srcObj = getSrcName(node.attributes)
+          if (!srcObj?.src)
+            return
+          blockFiles.push(srcObj.src)
+          const tagHtml = `<${node.name} ${genAttrstr(node.attributes)} ${srcObj.name}="{{ '${srcObj.src}' | asset_url }}"></${node.name}>\n`
+          if (node.name === 'link') {
+            styleOutput += tagHtml
+          }
+          else {
+            scriptOutput += tagHtml
+          }
+        }
+        if (node.name === 'style') {
+          const styleHtml = indexHTML.slice(node.start, node.end)
+
+          styleOutput = `${styleHtml}\n${styleOutput}`
+        }
+      }
+    },
+  })
+
+  const blockLiquid = styleOutput + templateHTML.replace('{%html%}', htmlCtx).replace('{%script%}', scriptOutput)
+
+  return {
+    blockLiquid,
+    blockFiles,
+  }
 }

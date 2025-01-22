@@ -1,10 +1,10 @@
 import process from 'node:process'
-import { bold, gray, red, reset, underline } from 'kolorist'
+import { bold, gray, green, red } from 'kolorist'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { build } from './build'
 
-// eslint-disable-next-line ts/no-unused-expressions
+// eslint-disable-next-line no-unused-expressions
 yargs(hideBin(process.argv))
   .scriptName('vite-ssg')
   .usage('$0 [args]')
@@ -37,8 +37,8 @@ yargs(hideBin(process.argv))
     },
   )
   .fail((msg, err, yargs) => {
+    console.error(`\n${gray('[vite-ssg]')} ${bold(green(msg))}`)
     console.error(`\n${gray('[vite-ssg]')} ${bold(red('An internal error occurred.'))}`)
-    console.error(`${gray('[vite-ssg]')} ${reset(`Please report an issue, if none already exists: ${underline('https://github.com/antfu/vite-ssg/issues')}`)}`)
     yargs.exit(1, err)
   })
   .showHelpOnFail(false)
