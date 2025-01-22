@@ -1,5 +1,5 @@
 {
-  "name": "vite-ssg",
+  "name": "@lute/liquid-ssg",
   "version": "25.0.0",
   "packageManager": "pnpm@9.15.3",
   "description": "Server-side generation for Vite",
@@ -27,10 +27,6 @@
     "./node": {
       "import": "./dist/node.mjs",
       "require": "./dist/node.cjs"
-    },
-    "./single-page": {
-      "import": "./dist/client/single-page.mjs",
-      "require": "./dist/client/single-page.cjs"
     }
   },
   "main": "dist/index.cjs",
@@ -38,9 +34,6 @@
   "types": "dist/index.d.ts",
   "typesVersions": {
     "*": {
-      "single-page": [
-        "dist/client/single-page.d.ts"
-      ],
       "node": [
         "dist/node.d.ts"
       ]
@@ -61,15 +54,6 @@
     "dev": "unbuild",
     "lint": "eslint .",
     "copy-readme-files": "esno scripts/copy-readme-files.ts",
-    "example:dev": "npm run copy-readme-files && npm -C examples/multiple-pages run dev",
-    "example:build": "npm run copy-readme-files && npm -C examples/multiple-pages run build",
-    "example:serve": "npm run copy-readme-files && npm -C examples/multiple-pages run serve",
-    "example:pwa:dev": "npm run copy-readme-files && npm -C examples/multiple-pages-pwa run dev",
-    "example:pwa:build": "npm run copy-readme-files && npm -C examples/multiple-pages-pwa run build",
-    "example:pwa:serve": "npm run copy-readme-files && npm -C examples/multiple-pages-pwa run serve",
-    "example:store:dev": "npm run copy-readme-files && npm -C examples/multiple-pages-with-store run dev",
-    "example:store:build": "npm run copy-readme-files && npm -C examples/multiple-pages-with-store run build",
-    "example:store:serve": "npm run copy-readme-files && npm -C examples/multiple-pages-with-store run serve",
     "example:single:dev": "npm -C examples/single-page run dev",
     "example:single:build": "npm -C examples/single-page run build",
     "example:single:serve": "npm -C examples/single-page run serve",

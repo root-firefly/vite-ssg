@@ -1,7 +1,7 @@
-import type { MergeHead, VueHeadClient } from '@unhead/vue'
+// import type { MergeHead, VueHeadClient } from '@unhead/vue'
 import type { Options as BeastiesOptions } from 'beasties'
 import type { App } from 'vue'
-import type { RouteRecordRaw, Router, RouterOptions as VueRouterOptions } from 'vue-router'
+import type { RouterOptions as VueRouterOptions } from 'vue-router'
 
 export interface ViteSSGOptions {
   /**
@@ -83,7 +83,7 @@ export interface ViteSSGOptions {
    * Defaults to a handler that filters out all the dynamic routes.
    * When passing your custom handler, you should also take care of the dynamic routes yourself.
    */
-  includedRoutes?: (paths: string[], routes: Readonly<RouteRecordRaw[]>) => Promise<string[]> | string[]
+  // includedRoutes?: (paths: string[], routes: Readonly<RouteRecordRaw[]>) => Promise<string[]> | string[]
 
   /**
    * Callback to be called before every page render.
@@ -93,7 +93,7 @@ export interface ViteSSGOptions {
    * To do so, you can change the 'index.html' file contents (passed in through the `indexHTML` parameter), and return it.
    * The returned value will then be passed to renderer.
    */
-  onBeforePageRender?: (route: string, indexHTML: string, appCtx: ViteSSGContext<true>) => Promise<string | null | undefined> | string | null | undefined
+  onBeforePageRender?: (indexHTML: string, appCtx: ViteSSGContext) => Promise<string | null | undefined> | string | null | undefined
 
   /**
    * Callback to be called on every rendered page.
@@ -103,7 +103,7 @@ export interface ViteSSGOptions {
    * To do so, you can transform the route's rendered HTML (passed in through the `renderedHTML` parameter), and return it.
    * The returned value will be used as the HTML of the route.
    */
-  onPageRendered?: (route: string, renderedHTML: string, appCtx: ViteSSGContext<true>) => Promise<string | null | undefined> | string | null | undefined
+  onPageRendered?: (renderedHTML: string, appCtx: ViteSSGContext) => Promise<string | null | undefined> | string | null | undefined
 
   onFinished?: () => Promise<void> | void
 
@@ -119,25 +119,36 @@ export interface ViteSSGOptions {
    *
    * @default 20
    */
-  concurrency?: number
+  // concurrency?: number
+  templateFile?: string
+
+  template?: string
+  entrys?: ViteSSGEntry[]
+}
+
+export interface ViteSSGEntry {
+  name: string
+  entry: string
+  template?: string
+  templateFile?: string
 }
 
 type PartialKeys<T, Keys extends keyof T> = Omit<T, Keys> & Partial<Pick<T, Keys>>
 
-export interface ViteSSGContext<HasRouter extends boolean = true> {
+export interface ViteSSGContext {
   app: App<Element>
-  router: HasRouter extends true ? Router : undefined
-  routes: HasRouter extends true ? Readonly<RouteRecordRaw[]> : undefined
-  initialState: Record<string, any>
-  head: VueHeadClient<MergeHead> | undefined
+  // router: HasRouter extends true ? Router : undefined
+  // routes: HasRouter extends true ? Readonly<RouteRecordRaw[]> : undefined
+  // initialState: Record<string, any>
+  // head: VueHeadClient<MergeHead> | undefined
   isClient: boolean
-  onSSRAppRendered: (cb: () => void) => void
-  triggerOnSSRAppRendered: (route: string, appHTML: string, appCtx: ViteSSGContext) => Promise<unknown[]>
+  // onSSRAppRendered: (cb: () => void) => void
+  // triggerOnSSRAppRendered: (appHTML: string, appCtx: ViteSSGContext) => Promise<unknown[]>
   transformState?: (state: any) => any
   /**
    * Current router path on SSG, `undefined` on client side.
    */
-  routePath?: string
+  // routePath?: string
 }
 
 export interface ViteSSGClientOptions {
