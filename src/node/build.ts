@@ -100,13 +100,13 @@ export async function build(ssgOptions: Partial<ViteSSGOptions> = {}, viteConfig
         rollupOptions: {
           output: format === 'esm'
             ? {
-                entryFileNames: '[name].mjs',
-                format: 'esm',
-              }
+              entryFileNames: '[name].mjs',
+              format: 'esm',
+            }
             : {
-                entryFileNames: '[name].cjs',
-                format: 'cjs',
-              },
+              entryFileNames: '[name].cjs',
+              format: 'cjs',
+            },
         },
       },
       mode: config.mode,
@@ -341,7 +341,10 @@ async function renderBlock({
     },
   })
 
-  const blockLiquid = styleOutput + templateHTML.replace('{%html%}', htmlCtx).replace('{%script%}', scriptOutput)
+  const blockLiquid = styleOutput
+    + templateHTML
+      .replace(/\{%\s*html\s*%\}/g, htmlCtx)
+      .replace(/\{%\s*script\s*%\}/g, scriptOutput)
 
   return blockLiquid
 }
